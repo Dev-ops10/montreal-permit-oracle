@@ -1,45 +1,49 @@
-# [Project name]
+# Montreal Building Permit MCP Server
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A Python MCP (Model Context Protocol) server that fetches and filters Montreal building permit data from the city's Open Data portal, making it available as callable tools for AI assistants like Claude.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `python mcp-montreal-permits/server.py` — start the MCP server (stdio transport)
+- MCP clients (e.g. Claude Desktop) connect by spawning the process as a subprocess
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Python 3.12
+- `fastmcp` 3.x — high-level MCP server framework (bundles `mcp`)
+- `pandas` — CSV filtering and data processing
+- `requests` — HTTP download of the permit CSV
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `mcp-montreal-permits/server.py` — all tool definitions and data logic
+- `mcp-montreal-permits/requirements.txt` — Python dependencies
+- `mcp-montreal-permits/README.md` — usage, Claude Desktop config, column reference
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Session-level CSV cache**: The 550k-row CSV (~79 MB ZIP) is downloaded once on first tool call and held in memory for the session. Call `reload_data()` to force a refresh.
+- **User-Agent required**: The Montreal Open Data server returns 403/RBAC errors without a browser-like User-Agent; the requests session sets one explicitly.
+- **Cost column absent**: The current Open Data CSV does not publish `cout_travaux_estimes`. `get_high_value_permits` uses `nb_logements` as a proxy and documents this clearly; it will automatically switch to cost if the column appears.
+- **Partial borough matching**: `get_recent_permits` uses case-insensitive `str.contains`, so "plateau" matches "Le Plateau-Mont-Royal".
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Four MCP tools:
 
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
+| Tool | What it does |
+|------|--------------|
+| `get_recent_permits(borough, days=7)` | Permits issued in a borough in the last N days |
+| `get_high_value_permits(min_cost=100000)` | Large-scale permits by unit count (cost proxy) |
+| `list_boroughs()` | Lists all 19 distinct boroughs in the dataset |
+| `reload_data()` | Clears cache and re-downloads the CSV |
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Always run `python server.py` from the project root or the `mcp-montreal-permits/` directory — the path in Claude Desktop config must be absolute.
+- The first tool call downloads ~79 MB; allow a few seconds for initial load.
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Data source: https://donnees.montreal.ca/dataset/d90eaf1b-2de8-43f0-923a-27a620ecdf41
+- CSV resource ID: `5232a72d-235a-48eb-ae20-bb9d501300ad`
