@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface DataStatus {
+  loaded: boolean;
+  /** @nullable */
+  total_rows: number | null;
+  /** @nullable */
+  fetched_at: string | null;
 }

@@ -5,7 +5,10 @@
  * Montreal Building Permit Explorer API
  * OpenAPI spec version: 0.1.0
  */
+import type { Permit } from "./permit";
 
-export interface HealthStatus {
-  status: string;
+export interface PermitList {
+  permits: Permit[];
+  total: number;
+  returned: number;
 }
