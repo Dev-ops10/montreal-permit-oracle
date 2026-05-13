@@ -1,0 +1,79 @@
+{
+  "schema_version": "2025-06-18",
+  "name": "Montreal Construction Oracle",
+  "version": "1.0.0",
+  "protocolVersion": "2025-06-18",
+  "description": "Query Montreal building permit data from the city's Open Data portal. Filter by borough and issuance date, or surface large-scale projects. Data is sourced from ~550 000 permits spanning decades of construction activity.",
+  "homepage": "https://donnees.montreal.ca/dataset/d90eaf1b-2de8-43f0-923a-27a620ecdf41",
+  "license": "OGL-Canada-2.0",
+  "tools": [
+    {
+      "name": "get_recent_permits",
+      "description": "Return building permits issued in the given Montreal borough within the last N days. Borough matching is case-insensitive and supports partial names (e.g. 'plateau' matches 'Le Plateau-Mont-Royal').",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "borough": {
+            "type": "string",
+            "description": "Borough (arrondissement) name to filter by. Case-insensitive, partial match supported. Use list_boroughs() to see all 19 available names."
+          },
+          "days": {
+            "type": "integer",
+            "description": "Number of days back to search from today. Defaults to 7.",
+            "default": 7,
+            "minimum": 1
+          }
+        },
+        "required": ["borough"]
+      }
+    },
+    {
+      "name": "get_high_value_permits",
+      "description": "Return large-scale building permits filtered by estimated work cost. NOTE: the Montreal Open Data CSV does not currently publish the 'cout_travaux_estimes' column. This tool uses 'nb_logements' (housing unit count) as a scale proxy: min_cost is divided by 100 000 to derive the minimum unit threshold. Results are sorted largest-first. The tool will automatically switch to real cost data if the column appears in a future dataset update.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "min_cost": {
+            "type": "number",
+            "description": "Minimum estimated cost in CAD. Translated to a housing-unit threshold (min_cost / 100 000) while the cost column is unavailable. Defaults to 100 000.",
+            "default": 100000,
+            "minimum": 0
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "list_boroughs",
+      "description": "List all 19 distinct borough (arrondissement) names found in the permit dataset. Use the returned names as input to get_recent_permits().",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "reload_data",
+      "description": "Clear the session cache and re-download the permit CSV from the Montreal Open Data portal. Useful if the dataset has been updated since the server started.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    }
+  ],
+  "author": {
+    "name": "Montreal Permits MCP"
+  },
+  "keywords": [
+    "montreal",
+    "building permits",
+    "construction",
+    "open data",
+    "real estate",
+    "urban planning",
+    "canada",
+    "quebec"
+  ],
+  "runtimeHint": "python"
+}
