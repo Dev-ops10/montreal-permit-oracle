@@ -290,6 +290,9 @@ async def serve_server_card(request: Request) -> Response:
 
 if __name__ == "__main__":
     import argparse
+    import os
+
+    _env_port = int(os.environ.get("PORT", "8000"))
 
     parser = argparse.ArgumentParser(description="Montreal Building Permit MCP Server")
     parser.add_argument(
@@ -306,8 +309,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Port to bind when using HTTP transport (default: 8000)",
+        default=_env_port,
+        help="Port to bind when using HTTP transport (default: $PORT env or 8000)",
     )
     args = parser.parse_args()
 
