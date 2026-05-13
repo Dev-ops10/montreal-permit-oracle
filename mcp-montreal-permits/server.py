@@ -19,12 +19,16 @@ Note: The Montreal Open Data CSV does not currently publish estimated work cost
 from __future__ import annotations
 
 import io
+import json
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 import requests
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 
 CSV_URL = (
     "https://donnees.montreal.ca/dataset/d90eaf1b-2de8-43f0-923a-27a620ecdf41"
@@ -254,5 +258,60 @@ def reload_data() -> str:
     )
 
 
+_SERVER_CARD_PATH = Path(__file__).parent.parent / ".well-known" / "mcp" / "server-card.json"
+
+CORS_HEADERS = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+}
+
+
+@mcp.custom_route("/.well-known/mcp/server-card.json", methods=["GET", "OPTIONS"])
+async def serve_server_card(request: Request) -> Response:
+    """
+    Serve the MCP server card for Smithery.ai / MCP.directory discovery.
+    Always available when the server runs with HTTP transport.
+    """
+    if request.method == "OPTIONS":
+        return Response(status_code=204, headers=CORS_HEADERS)
+
+    if not _SERVER_CARD_PATH.exists():
+        return Response(
+            content=json.dumps({"error": "server-card.json not found"}),
+            status_code=404,
+            media_type="application/json",
+            headers=CORS_HEADERS,
+        )
+
+    card = json.loads(_SERVER_CARD_PATH.read_text(encoding="utf-8"))
+    return JSONResponse(content=card, headers=CORS_HEADERS)
+
+
 if __name__ == "__main__":
-    mcp.run()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Montreal Building Permit MCP Server")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "http"],
+        default="stdio",
+        help="Transport to use: 'stdio' (default, for Claude Desktop) or 'http' (for remote/Smithery)",
+    )
+    parser.add_argument(
+        "--host",
+        default="0.0.0.0",
+        help="Host to bind when using HTTP transport (default: 0.0.0.0)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to bind when using HTTP transport (default: 8000)",
+    )
+    args = parser.parse_args()
+
+    if args.transport == "http":
+        mcp.run(transport="streamable-http", host=args.host, port=args.port)
+    else:
+        mcp.run(transport="stdio")
