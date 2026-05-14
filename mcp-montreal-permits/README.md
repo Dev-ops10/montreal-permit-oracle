@@ -1,5 +1,7 @@
 # Montreal Building Permit MCP Server
 
+[![Smithery](https://smithery.ai/badge/maximeproulx4/MontrealPermitOracle2)](https://smithery.ai/server/maximeproulx4/MontrealPermitOracle2)
+
 An MCP (Model Context Protocol) server that exposes Montreal building permit data from the city's [Open Data portal](https://donnees.montreal.ca) as callable tools for AI assistants.
 
 ## Tools
