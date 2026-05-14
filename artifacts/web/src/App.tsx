@@ -242,7 +242,17 @@ export default function App() {
       <footer className="border-t border-white/8">
         <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-white/20">
           <span>Montreal Construction Oracle · MCP Protocol 2025-06-18</span>
-          <span>Data © Ville de Montréal</span>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://smithery.ai/servers/maximeproulx4/MontrealPermitOracle2"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white/50 transition-colors"
+            >
+              Listed on Smithery
+            </a>
+            <span>Data © Ville de Montréal</span>
+          </div>
         </div>
       </footer>
     </div>
